@@ -80,7 +80,7 @@ nav button.tab[aria-selected="true"]::after{transform:scaleX(1)}
   nav{display:none}
   .tools{margin-inline-start:auto}
   .sync span{display:none}
-  .tabbar{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;inset-inline:0;bottom:0;z-index:50;background:var(--header);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;inset-inline:0;bottom:0;z-index:50;background:var(--header);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
   .tabbar button{background:none;border:0;padding:13px 4px 11px;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);position:relative}
   :root[lang="ar"] .tabbar button{letter-spacing:0;font-size:12.5px}
   .tabbar button[aria-selected="true"]{color:var(--blue)}
@@ -264,6 +264,19 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 @media(max-width:820px){.toast{bottom:86px}}
 .demo-bar{background:var(--ink);color:var(--bg);text-align:center;font-size:12px;font-weight:700;padding:6px}
 .topbar{background:var(--blue-deep);color:#ece9e3;text-align:center;font-family:var(--display);font-stretch:112%;font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;padding:9px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scan-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(16px,3vw,28px);align-items:start}
+@media(max-width:900px){.scan-grid{grid-template-columns:minmax(0,1fr)}}
+.reader{aspect-ratio:4/3;background:#000;border:1px solid var(--line-2);display:grid;place-items:center;overflow:hidden;position:relative}
+.reader video{width:100%!important;height:100%!important;object-fit:cover}
+.reader-ph{color:var(--muted-2);display:flex;flex-direction:column;align-items:center;gap:10px;font-weight:700;font-size:13px}
+.reader-ph svg{width:38px;height:38px;stroke:currentColor;fill:none;stroke-width:1.6}
+.qty{display:flex;align-items:center;gap:8px}
+.qty .sq{width:32px;height:32px;font-size:16px}
+.qty .n{min-width:24px;text-align:center;font-weight:800}
+.dot{width:10px;height:10px;flex:none}
+.dot.ok{background:var(--green)} .dot.bad{background:var(--red)} .dot.wait{background:var(--muted-2);animation:pulse .8s ease-in-out infinite}
+.flash{animation:flashIn .5s ease}
+@keyframes flashIn{from{background:var(--blue-soft)}to{background:transparent}}
 footer{padding:28px 0 40px;color:var(--muted-2);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
 :root[lang="ar"] footer{letter-spacing:0;font-size:12.5px}
 </style>
@@ -306,6 +319,12 @@ const T = {
     confirmDel:"متأكد إنك عايز تحذف المنتج ده؟ (هيتخفى بس، والحركة القديمة هتفضل)", confirmCancel:"إلغاء الطلب هيرجّع الكميات للمخزون. متأكد؟",
     saved:"اتحفظ ✓", orderSaved:"الطلب اتسجل واتخصم من المخزون ✓", cancelledOk:"الطلب اتلغى والكميات رجعت ✓", deleted:"اتحذف ✓",
     avail:"متاح", exceeds:"أكتر من المتاح", outOf:"خلص",
+    scan:"سكان", scanLead:"اعمل سكان للباركود بالكاميرا أو بسكانر USB، والعملية بتتسجل لوحدها.",
+    camStart:"شغّل الكاميرا", camStop:"وقف الكاميرا", camOff:"الكاميرا مقفولة", camErr:"مقدرتش أفتح الكاميرا. اسمح للموقع بالكاميرا من المتصفح.",
+    manualCode:"أو اكتب الكود", perScan:"الكمية لكل سكان", usbHint:"سكانر USB أو Bluetooth شغال من أي صفحة: اعمل سكان والعملية هتتسجل لوحدها.",
+    scanLog:"آخر السكانات", unknownCode:"كود مش معروف", toCart:"اتضاف للسلة", cart:"السلة", cartEmpty:"اعمل سكان لمنتج وهيتضاف هنا.", clear:"مسح",
+    labels:"باركود", labelsTitle:"طباعة باركود", labelsFor:"هيتطبع للمنتجات اللي ظاهرة دلوقتي في القايمة", copies:"عدد النسخ", perProduct:"نسخة لكل منتج", byStock:"بعدد المخزون",
+    fmt:"مقاس الطباعة", a4:"ورقة A4 (4 في الصف)", roll:"طابعة استيكر 50×30 مم", withPrice:"اطبع السعر", print:"اطبع", popupBlocked:"المتصفح قفل النافذة. اسمح بالـ Pop-ups للموقع.",
     e_bad_login:"اليوزر أو الباسورد غلط.", e_locked:"محاولات كتير غلط. استنى ربع ساعة.", e_no_users_sheet:"مفيش تاب user أو فاضي.",
     e_unauthorized:"الجلسة انتهت. ادخل تاني.", e_net:"مفيش اتصال بالشيت.", e_url:"الرابط ده مش Web app شغال، أو الصلاحية مش Anyone.",
     e_unknown_action:"Code.gs قديم. حدّثه واعمل Deploy بنسخة جديدة.", e_need:"اكتب اليوزر والباسورد.", e_forbidden:"الصلاحية دي للأدمن بس.",
@@ -333,6 +352,12 @@ const T = {
     confirmDel:"Delete this product? (It will be hidden; history stays.)", confirmCancel:"Cancelling returns the quantities to stock. Sure?",
     saved:"Saved ✓", orderSaved:"Order saved and stock deducted ✓", cancelledOk:"Order cancelled, stock restored ✓", deleted:"Deleted ✓",
     avail:"available", exceeds:"More than available", outOf:"Out",
+    scan:"Scan", scanLead:"Scan barcodes with the camera or a USB scanner; each scan is recorded automatically.",
+    camStart:"Start camera", camStop:"Stop camera", camOff:"Camera is off", camErr:"Couldn't open the camera. Allow camera access in the browser.",
+    manualCode:"Or type the code", perScan:"Qty per scan", usbHint:"A USB or Bluetooth scanner works from any page: scan and it's recorded automatically.",
+    scanLog:"Recent scans", unknownCode:"Unknown code", toCart:"added to cart", cart:"Cart", cartEmpty:"Scan a product to add it here.", clear:"Clear",
+    labels:"Barcodes", labelsTitle:"Print barcodes", labelsFor:"Prints for the products currently shown in the list", copies:"Copies", perProduct:"One per product", byStock:"Match stock qty",
+    fmt:"Format", a4:"A4 sheet (4 per row)", roll:"Label printer 50×30 mm", withPrice:"Print price", print:"Print", popupBlocked:"The browser blocked the window. Allow pop-ups for this site.",
     e_bad_login:"Wrong username or password.", e_locked:"Too many wrong tries. Wait 15 minutes.", e_no_users_sheet:"The user tab is missing or empty.",
     e_unauthorized:"Session ended. Sign in again.", e_net:"Cannot reach the sheet.", e_url:"That URL is not a working web app, or access is not Anyone.",
     e_unknown_action:"Code.gs is outdated. Update it and deploy a new version.", e_need:"Enter the username and password.", e_forbidden:"Admins only.",
@@ -430,6 +455,7 @@ const ICON = {
   moon:'<svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
   out:'<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
   x:'<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  cam:'<svg viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 8v8M10 8v8M13 8v8M17 8v8"/></svg>',
   refresh:'<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>',
 };
 
@@ -438,7 +464,8 @@ function render(){
   document.documentElement.dir = S.lang === "ar" ? "rtl" : "ltr";
   const app = $("app");
   if (!S.ses || !S.data){ app.innerHTML = TOPBAR + viewHeader(false) + `<main class="${S.fresh?"fresh":""}">${viewLogin()}</main>`; S.fresh = false; return; }
-  const view = { home:viewHome, products:viewProducts, orders:viewOrders, moves:viewMoves }[S.tab]();
+  if (S.cam) stopCam();
+  const view = { home:viewHome, products:viewProducts, scan:viewScan, orders:viewOrders, moves:viewMoves }[S.tab]();
   app.innerHTML = (S.demo ? `<div class="demo-bar">${t("demoBar")}</div>` : TOPBAR) + viewHeader(true) +
     `<main class="${S.fresh ? "fresh" : ""}">${view}<div class="wrap"><footer>EXIT · Stock · ${esc(S.data.user.name)} · ${esc(S.data.user.role)}</footer></div></main>` + viewTabbar();
   S.fresh = false;
@@ -446,6 +473,7 @@ function render(){
 
 /** تحديث من غير ما يبوّظ الكتابة في البحث */
 function softRender(){
+  if (S.tab === "scan" && S.data){ updateScanUI(); return; }
   const active = document.activeElement;
   if (active && active.id && active.matches("input,select,textarea")){
     const id = active.id, pos = active.selectionStart;
@@ -455,7 +483,7 @@ function softRender(){
 }
 
 function viewHeader(authed){
-  const tabs = ["home","products","orders","moves"];
+  const tabs = ["home","products","scan","orders","moves"];
   return `<header>
     <div class="brand"><span class="mark lat">EXIT</span><span class="div"></span><span class="name">${authed ? esc(S.data.user.name) : t("brandName")}</span></div>
     ${authed ? `<nav>${tabs.map(k => `<button class="tab" data-act="tab" data-v="${k}" aria-selected="${S.tab===k}">${t(k)}</button>`).join("")}</nav>` : ""}
@@ -469,7 +497,7 @@ function viewHeader(authed){
 }
 
 function viewTabbar(){
-  return `<div class="tabbar">${["home","products","orders","moves"].map(k =>
+  return `<div class="tabbar">${["home","products","scan","orders","moves"].map(k =>
     `<button data-act="tab" data-v="${k}" aria-selected="${S.tab===k}">${t(k)}</button>`).join("")}</div>`;
 }
 
@@ -541,13 +569,18 @@ function viewProducts(){
      <input class="inp grow" id="f-p" placeholder="${t("search")}" value="${esc(S.f.p)}" data-f="p">
      ${cats.length ? `<select class="inp" id="f-pc" data-f="pc" style="width:auto;min-width:150px"><option value="">${t("allCats")}</option>${cats.map(c => `<option ${S.f.pc===c?"selected":""}>${esc(c)}</option>`).join("")}</select>` : ""}
      <button class="chip" data-act="lowonly" aria-pressed="${S.f.low}">${t("lowOnly")}</button>
+     <button class="btn ghost" data-act="labels">${t("labels")}</button>
      ${isAdmin() ? `<button class="btn" data-act="addProduct">+ ${t("addProduct")}</button>` : ""}
    </div><div id="list" class="rv" style="--i:3">${listProducts()}</div></div>`;
 }
 
-function listProducts(){
+function filteredProducts(){
   const q = S.f.p.trim().toLowerCase();
-  const rows = P().filter(p => (!q || (p.name + " " + p.sku + " " + p.cat).toLowerCase().includes(q)) && (!S.f.pc || p.cat === S.f.pc) && (!S.f.low || isLow(p)));
+  return P().filter(p => (!q || (p.name + " " + p.sku + " " + p.cat).toLowerCase().includes(q)) && (!S.f.pc || p.cat === S.f.pc) && (!S.f.low || isLow(p)));
+}
+
+function listProducts(){
+  const rows = filteredProducts();
   if (!rows.length) return `<div class="tbl-wrap"><div class="empty">${t("nothing")}</div></div>`;
   const admin = isAdmin();
   return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>${t("product")}</th><th>${t("price")}</th>${admin ? `<th>${t("cost")}</th>` : ""}<th>${t("stock")}</th><th>${t("min")}</th><th></th></tr></thead><tbody>
@@ -679,6 +712,16 @@ function renderModal(){
       `<button type="button" class="btn ghost" data-act="closeModal">${t("cancel")}</button><button class="btn" type="submit">${t("confirmOrder")}</button>`, true, "order-form");
   }
 
+  if (m.type === "labels"){
+    root.innerHTML = shell(t("labelsTitle"), `
+      <p class="sub" style="margin-bottom:14px">${t("labelsFor")} · <b class="n">${m.list.length}</b></p>
+      <div class="field"><label>${t("copies")}</label><select class="inp" id="lb-copies"><option value="1">${t("perProduct")}</option><option value="stock">${t("byStock")}</option>
+        ${[2,3,5,10].map(n => `<option value="${n}">×${n}</option>`).join("")}</select></div>
+      <div class="field"><label>${t("fmt")}</label><select class="inp" id="lb-fmt"><option value="a4">${t("a4")}</option><option value="roll">${t("roll")}</option></select></div>
+      <label class="chip" style="cursor:pointer"><input type="checkbox" id="lb-price" checked> ${t("withPrice")}</label>`,
+      `<button type="button" class="btn ghost" data-act="closeModal">${t("cancel")}</button><button type="button" class="btn" data-act="printLabels">${t("print")}</button>`);
+  }
+
   if (m.type === "viewOrder"){
     const o = S.data.orders.find(x => String(x.no) === String(m.no)); if (!o){ S.modal = null; return renderModal(); }
     root.innerHTML = shell(`<span class="n">#${o.no}</span> <span class="tag t-${esc(o.status)}" style="vertical-align:middle">${t(o.status)}</span>`, `
@@ -725,6 +768,15 @@ document.addEventListener("click", e => {
   if (a === "viewOrder") return openModal({ type:"viewOrder", no: id });
   if (a === "cancelOrder"){ if (confirm(t("confirmCancel"))) write("cancelOrder", { no: id }, t("cancelledOk")); return; }
   if (a === "closeModal") return closeModal();
+  if (a === "labels") return openModal({ type:"labels", list: filteredProducts() });
+  if (a === "printLabels"){ printLabels(S.modal.list, $("lb-copies").value, $("lb-fmt").value, $("lb-price").checked); return closeModal(); }
+  if (a === "cam") return S.cam ? stopCam() : startCam();
+  if (a === "scanMode"){ SC.mode = v; document.querySelectorAll('[data-act="scanMode"]').forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v)); const c = $("scan-cart"); if (c) c.hidden = v !== "SALE"; return; }
+  if (a === "cartInc" || a === "cartDec"){ const l = SC.cart.find(x => x.id === id), p = byId(id); if (!l) return;
+    if (a === "cartInc"){ if (l.qty + 1 > p.stock){ beep(false); return toast(t("e_no_stock") + " (" + qn(p.stock) + ")", true); } l.qty++; } else { l.qty--; if (l.qty <= 0) SC.cart = SC.cart.filter(x => x !== l); }
+    return updateScanUI(); }
+  if (a === "cartClear"){ SC.cart = []; return updateScanUI(); }
+  if (a === "cartConfirm") return confirmCart(el);
 });
 
 function syncOrderFields(){
@@ -735,6 +787,9 @@ function syncOrderFields(){
 document.addEventListener("input", e => {
   const el = e.target;
   if (el.dataset.f){ S.f[el.dataset.f] = el.value; const list = $("list"); if (list) list.innerHTML = { products:listProducts, orders:listOrders, moves:listMoves }[S.tab](); return; }
+  if (el.id === "scan-mult"){ SC.mult = el.value; return; }
+  if (el.id === "sc-cust"){ SC.cust = el.value; return; }
+  if (el.id === "sc-phone"){ SC.phone = el.value; return; }
   if (el.id === "mv-qty"){
     const m = S.modal, p = byId(m.id); m.qty = el.value; const q = num(el.value);
     $("mv-prev").innerHTML = movePreview(p.stock, m.mt === "IN" ? p.stock + q : m.mt === "OUT" ? p.stock - q : (el.value === "" ? p.stock : q)); return;
@@ -788,6 +843,178 @@ document.addEventListener("submit", e => {
 });
 
 document.addEventListener("keydown", e => { if (e.key === "Escape" && S.modal) closeModal(); });
+
+/* ======================= SCAN ======================= */
+const SC = { mode:"SALE", mult:"1", log:[], cart:[], cust:"", phone:"", last:{ code:"", t:0 }, q:Promise.resolve(), busy:false };
+const codeOf = p => (p.sku && /^[\x20-\x7E]+$/.test(p.sku.trim())) ? p.sku.trim() : p.id;
+function findByCode(code){
+  const c = String(code).trim().toLowerCase();
+  return P().find(p => (p.sku && p.sku.trim().toLowerCase() === c) || p.id.toLowerCase() === c);
+}
+
+function viewScan(){
+  return hero(t("brandName"), t("scan"), "", t("scanLead")) +
+  `<div class="wrap sec"><div class="scan-grid">
+    <div>
+      <div class="seg rv" style="--i:2">${["SALE","IN","OUT"].map(k => `<button type="button" data-act="scanMode" data-v="${k}" aria-pressed="${SC.mode===k}">${t(k)}</button>`).join("")}</div>
+      <div class="card rv" style="--i:3">
+        <div id="reader" class="reader"><div class="reader-ph">${ICON.cam}<span>${t("camOff")}</span></div></div>
+        <button class="btn" style="width:100%;margin-top:12px" data-act="cam" id="cam-btn">${t("camStart")}</button>
+        <div class="grid2" style="margin-top:14px">
+          <div class="field"><label for="scan-in">${t("manualCode")}</label><input class="inp" id="scan-in" dir="ltr" autocomplete="off" spellcheck="false" placeholder="SKU / Barcode"></div>
+          <div class="field"><label for="scan-mult">${t("perScan")}</label><input class="inp n" id="scan-mult" inputmode="numeric" value="${esc(SC.mult)}"></div>
+        </div>
+        <p class="hint" style="margin-top:0">${t("usbHint")}</p>
+      </div>
+    </div>
+    <div>
+      <div class="card rv" style="--i:4;margin-bottom:16px" id="scan-cart" ${SC.mode === "SALE" ? "" : "hidden"}>${cartHtml()}</div>
+      <div class="card rv" style="--i:5"><div class="eyebrow">${t("scanLog")}</div><div class="rows" id="scan-log" style="margin-top:8px">${logHtml()}</div></div>
+    </div>
+  </div></div>`;
+}
+
+function cartHtml(){
+  const lines = SC.cart.map(l => Object.assign({ p: byId(l.id) }, l)).filter(l => l.p);
+  const total = lines.reduce((s, l) => s + l.qty * l.price, 0);
+  if (!lines.length) return `<div class="eyebrow amber">${t("cart")}</div><div class="empty">${t("cartEmpty")}</div>`;
+  return `<div class="eyebrow amber">${t("cart")}</div><div class="rows" style="margin-top:6px">${lines.map(l => `
+    <div class="row"><div class="grow"><b>${esc(l.p.name)}</b><span class="p-meta">${CUR} <span class="n">${money(l.price)}</span> · ${t("avail")} <span class="n">${qn(l.p.stock)}</span></span></div>
+      <div class="qty"><button type="button" class="sq" data-act="cartDec" data-id="${esc(l.id)}">−</button><span class="n">${qn(l.qty)}</span><button type="button" class="sq" data-act="cartInc" data-id="${esc(l.id)}">+</button></div></div>`).join("")}</div>
+    <div class="grid2" style="margin-top:12px"><input class="inp" id="sc-cust" placeholder="${t("customer")}" value="${esc(SC.cust)}"><input class="inp" id="sc-phone" dir="ltr" inputmode="tel" placeholder="${t("phone")}" value="${esc(SC.phone)}"></div>
+    <div class="total"><span class="eyebrow amber">${t("total")}</span><b class="n">${CUR} ${money(total)}</b></div>
+    <div class="grid2" style="margin-top:12px"><button type="button" class="btn ghost" data-act="cartClear">${t("clear")}</button><button type="button" class="btn" data-act="cartConfirm" ${SC.busy ? "disabled" : ""}>${t("confirmOrder")}</button></div>`;
+}
+
+function logHtml(){
+  if (!SC.log.length) return `<div class="empty">—</div>`;
+  return SC.log.map((e, i) => `<div class="row ${i === 0 && Date.now() - e.at < 900 ? "flash" : ""}"><i class="dot ${e.ok === null ? "wait" : e.ok ? "ok" : "bad"}"></i>
+    <div class="grow"><b>${esc(e.p ? e.p.name : e.code)}</b><span class="p-meta">${esc(e.msg)}</span></div><span class="n" style="color:var(--muted-2);font-size:12px">${fmtDate(new Date(e.at).toISOString()).split(" · ")[1]}</span></div>`).join("");
+}
+
+function updateScanUI(){
+  const c = $("scan-cart");
+  if (c){ const ae = document.activeElement, keep = ae && c.contains(ae) && ae.id ? { id:ae.id, pos:ae.selectionStart } : null;
+    c.innerHTML = cartHtml();
+    if (keep){ const el = $(keep.id); if (el){ el.focus(); try{ el.setSelectionRange(keep.pos, keep.pos); }catch(e){} } } }
+  const l = $("scan-log"); if (l) l.innerHTML = logHtml();
+}
+
+function addLog(e){ e.at = Date.now(); SC.log.unshift(e); SC.log = SC.log.slice(0, 30); return e; }
+
+function handleCode(raw, fromCam){
+  const code = String(raw || "").trim(); if (!code || !S.data) return;
+  const now = Date.now();
+  if (fromCam && code === SC.last.code && now - SC.last.t < 1800) return; // الكاميرا بتقرا نفس الكود كذا مرة
+  SC.last = { code, t: now };
+  const p = findByCode(code);
+  if (!p){ beep(false); addLog({ code, ok:false, msg:t("unknownCode") + ": " + code }); return updateScanUI(); }
+  const n = Math.max(1, Math.round(num(SC.mult)) || 1);
+
+  if (SC.mode === "SALE"){
+    const line = SC.cart.find(l => l.id === p.id), have = line ? line.qty : 0;
+    if (have + n > p.stock){ beep(false); addLog({ p, ok:false, msg:t("e_no_stock") + " (" + qn(p.stock) + ")" }); return updateScanUI(); }
+    if (line) line.qty += n; else SC.cart.push({ id:p.id, qty:n, price:p.price });
+    beep(true); addLog({ p, ok:true, msg:"+" + n + " " + t("toCart") });
+    return updateScanUI();
+  }
+
+  if (SC.mode === "OUT" && n > p.stock){ beep(false); addLog({ p, ok:false, msg:t("e_no_stock") + " (" + qn(p.stock) + ")" }); return updateScanUI(); }
+  const type = SC.mode, entry = addLog({ p, ok:null, msg:(type === "IN" ? "+" : "−") + n + " · " + t(type) });
+  p.stock += type === "IN" ? n : -n;  // تحديث فوري، والسيرفر بيأكد
+  beep(true); setSync("busy"); updateScanUI();
+  SC.q = SC.q.then(() => call("move", { id:p.id, type, qty:n, note:"Scan" })).then(j => {
+    S.data = j.data; saveCache(); entry.ok = true; setSync("ok"); updateScanUI();
+  }).catch(e => {
+    entry.ok = false; entry.msg += " · " + errText(e); beep(false); setSync("err"); updateScanUI();
+    if (e.code === "unauthorized") logout(errText(e)); else refresh(true);
+  });
+}
+
+function confirmCart(btn){
+  if (!SC.cart.length || SC.busy) return;
+  const items = SC.cart.map(l => ({ id:l.id, qty:l.qty, price:l.price }));
+  SC.busy = true; if (btn) btn.disabled = true; setSync("busy");
+  SC.q = SC.q.then(() => call("order", { customer:SC.cust, phone:SC.phone, note:"Scan", items })).then(j => {
+    S.data = j.data; saveCache(); SC.cart = []; SC.cust = ""; SC.phone = ""; setSync("ok"); beep(true);
+    toast(t("orderSaved") + " #" + j.no);
+  }).catch(e => { setSync("err"); beep(false); toast(errText(e), true); if (e.code === "unauthorized") logout(errText(e)); })
+    .finally(() => { SC.busy = false; updateScanUI(); });
+}
+
+let AC;
+function beep(ok){
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.type = "square"; o.frequency.value = ok ? 1480 : 210; g.gain.value = .05;
+    o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + (ok ? .08 : .3));
+  } catch(e) {}
+  if (navigator.vibrate) navigator.vibrate(ok ? 35 : [90, 60, 90]);
+}
+
+function loadScript(src){ return new Promise((res, rej) => { const x = document.createElement("script"); x.src = src; x.onload = res; x.onerror = rej; document.head.appendChild(x); }); }
+
+async function startCam(){
+  if (S.cam) return;
+  const btn = $("cam-btn"); if (btn){ btn.disabled = true; btn.textContent = "…"; }
+  try {
+    if (!window.Html5Qrcode) await loadScript("https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js");
+    const el = $("reader"); if (!el) return; el.innerHTML = "";
+    const F = window.Html5QrcodeSupportedFormats;
+    const cam = new Html5Qrcode("reader", { verbose:false, formatsToSupport:[F.CODE_128, F.QR_CODE, F.CODE_39, F.EAN_13, F.EAN_8, F.UPC_A],
+      experimentalFeatures:{ useBarCodeDetectorIfSupported:true } });
+    S.cam = cam;
+    await cam.start({ facingMode:"environment" }, { fps:12, qrbox:(w, h) => ({ width:Math.floor(Math.min(w * .86, 360)), height:Math.floor(Math.min(h * .55, 190)) }) },
+      txt => handleCode(txt, true), () => {});
+  } catch(e) {
+    S.cam = null; toast(t("camErr"), true);
+    const el = $("reader"); if (el) el.innerHTML = `<div class="reader-ph">${ICON.cam}<span>${t("camOff")}</span></div>`;
+  }
+  camBtn();
+}
+
+function stopCam(){
+  const c = S.cam; S.cam = null;
+  if (c) c.stop().then(() => c.clear()).catch(() => {}).finally(() => { const el = $("reader"); if (el && !el.children.length) el.innerHTML = `<div class="reader-ph">${ICON.cam}<span>${t("camOff")}</span></div>`; });
+  camBtn();
+}
+function camBtn(){ const b = $("cam-btn"); if (b){ b.disabled = false; b.textContent = S.cam ? t("camStop") : t("camStart"); } }
+
+/* سكانر USB/Bluetooth = كيبورد بيكتب بسرعة جداً وبيدوس Enter */
+const KB = { s:"", t:0 };
+document.addEventListener("keydown", e => {
+  if (e.target.id === "scan-in" && e.key === "Enter"){ e.preventDefault(); handleCode(e.target.value); e.target.value = ""; return; }
+  if (!S.data || S.modal) return;
+  if (e.target.matches && e.target.matches("input,textarea,select")) return;
+  const now = Date.now();
+  if (e.key === "Enter"){
+    if (KB.s.length >= 3 && now - KB.t < 120){ e.preventDefault(); const code = KB.s; KB.s = "";
+      if (S.tab !== "scan"){ S.tab = "scan"; S.fresh = true; render(); }
+      handleCode(code); }
+    KB.s = ""; return;
+  }
+  if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey){ if (now - KB.t > 80) KB.s = ""; KB.s += e.key; KB.t = now; }
+});
+
+function printLabels(list, copies, fmt, withPrice){
+  const items = [];
+  list.forEach(p => { const n = copies === "stock" ? Math.max(0, Math.round(p.stock)) : Math.max(1, Math.round(num(copies)) || 1); for (let i = 0; i < n; i++) items.push(p); });
+  if (!items.length) return toast(t("nothing"), true);
+  const w = window.open("", "_blank"); if (!w) return toast(t("popupBlocked"), true);
+  const page = fmt === "roll"
+    ? "@page{size:50mm 30mm;margin:0}.sheet{display:block}.lb{width:50mm;height:30mm;page-break-after:always;break-after:page}"
+    : "@page{size:A4;margin:8mm}.sheet{display:grid;grid-template-columns:repeat(4,1fr)}.lb{height:30mm;outline:1px dashed #ccc;outline-offset:-1px;break-inside:avoid}";
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>EXIT · Barcodes</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff}${page}
+.lb{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5mm 2.5mm;overflow:hidden;text-align:center;gap:.4mm}
+.br{font-weight:900;letter-spacing:.32em;font-size:7.5pt;padding-left:.32em}.nm{font-size:6.8pt;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.pr{font-size:8pt;font-weight:900}svg{max-width:100%;height:13mm;display:block}</style>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script></head><body><div class="sheet">
+${items.map(p => `<div class="lb"><div class="br">EXIT</div><div class="nm" dir="auto">${esc(p.name)}</div><svg class="bc" data-v="${esc(codeOf(p))}"></svg>${withPrice ? `<div class="pr">LE ${money(p.price)}</div>` : ""}</div>`).join("")}
+</div><script>window.onload=function(){document.querySelectorAll("svg.bc").forEach(function(s){try{JsBarcode(s,s.getAttribute("data-v"),{format:"CODE128",width:1.5,height:42,fontSize:11,margin:0,textMargin:1})}catch(e){}});setTimeout(function(){window.print()},350)};<\/script></body></html>`);
+  w.document.close();
+}
 
 /* ======================= CHROME ======================= */
 let toastT;

@@ -30,8 +30,8 @@ function onOpen() {
 /** شغّلها مرة واحدة: بتعمل التابات الناقصة + يوزر admin مبدئي */
 function setup() {
   ensureSheets_();
-  const u = sheet_(SH.USERS);
-  if (u.getLastRow() < 2) u.appendRow(['admin', 'change-me', 'Admin', 'admin', 'Yes']);
+  const u = usersTab_();
+  if (u.getLastRow() < 2 && u.getName() === SH.USERS) u.appendRow(['admin', 'change-me', 'Admin', 'admin', 'Yes']);
   try { SpreadsheetApp.getUi().alert('✅ التابات جاهزة.\nغيّر باسورد admin من تاب My user، وبعدين Deploy كـ Web app.'); } catch (e) {}
 }
 
@@ -174,19 +174,31 @@ function login_(q) {
   const tries = Number(c.get(k) || 0);
   if (tries >= MAX_TRIES) throw E('locked');
 
-  const rows = values_(sheet_(SH.USERS), HEAD[SH.USERS].length);
-  if (!rows.length) throw E('no_users_sheet');
-  const row = rows.find(r =>
-    String(r[0]).trim().toLowerCase() === name &&
-    String(r[1]) === pass &&
-    !/^(no|false|0|لا)$/i.test(String(r[4]).trim()));
+  const U = usersTab_();
+  if (!U || U.getLastRow() < 2) throw E('no_users_sheet');
+  const all = U.getRange(1, 1, U.getLastRow(), U.getLastColumn()).getValues();
+  const head = all[0].map(h => String(h).trim().toLowerCase());
+  const col = names => head.findIndex(h => names.includes(h));
+  const cU = col(['username', 'user', 'name', 'اليوزر', 'الاسم']);
+  const cP = col(['password', 'pass', 'الباسورد']);
+  const cN = col(['display name', 'full name', 'الاسم الكامل']);
+  const cR = col(['role', 'الصلاحية']);
+  const cA = col(['active', 'مفعل']);
+  if (cU < 0 || cP < 0) throw E('no_users_sheet');
+
+  const row = all.slice(1).find(r =>
+    String(r[cU]).trim().toLowerCase() === name &&
+    String(r[cP]).trim() === pass.trim() &&
+    !(cA >= 0 && /^(no|false|0|لا)$/i.test(String(r[cA]).trim())));
   if (!row) { c.put(k, String(tries + 1), LOCK_SEC); throw E('bad_login'); }
   c.remove(k);
 
+  // من غير عمود role: الكل admin. لو فيه عمود role: اكتب staff للعمال
+  const roleTxt = cR >= 0 ? String(row[cR]).trim() : '';
   const user = {
-    u: String(row[0]).trim(),
-    name: String(row[2] || row[0]).trim(),
-    role: /^admin$/i.test(String(row[3]).trim()) ? 'admin' : 'staff',
+    u: String(row[cU]).trim(),
+    name: String((cN >= 0 && row[cN]) || row[cU]).trim(),
+    role: cR < 0 || roleTxt === '' || /^admin$/i.test(roleTxt) ? 'admin' : 'staff',
   };
   const token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
   c.put('tok:' + token, JSON.stringify(user), SESSION_TTL);
@@ -279,12 +291,19 @@ function ensureSheets_() {
   const ss = SpreadsheetApp.getActive();
   Object.keys(HEAD).forEach(name => {
     if (ss.getSheetByName(name)) return;
+    if (name === SH.USERS && usersTab_()) return;
     const sh = ss.insertSheet(name);
     sh.getRange(1, 1, 1, HEAD[name].length).setValues([HEAD[name]])
       .setFontWeight('bold').setBackground('#1c1a19').setFontColor('#ffffff');
     sh.setFrozenRows(1);
     if (name === SH.USERS) sh.getRange('A:B').setNumberFormat('@');
   });
+}
+
+/** تاب اليوزرز: "My user" أو "user" أو "users" (مش حساس لكابيتال) */
+function usersTab_() {
+  return SpreadsheetApp.getActive().getSheets()
+    .find(sh => ['my user', 'user', 'users'].includes(sh.getName().trim().toLowerCase())) || null;
 }
 
 function sheet_(name) { return SpreadsheetApp.getActive().getSheetByName(name); }
