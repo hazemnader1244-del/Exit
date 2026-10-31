@@ -390,6 +390,11 @@ const T = {
     discSub:"اعمل كود خصم نسبة أو مبلغ ثابت على الحتة، بحد استخدام وتاريخ انتهاء.", addCode:"كود جديد", code:"الكود", type:"النوع", value:"القيمة", uses:"الاستخدام", ends:"ينتهي", active:"مفعّل",
     percent:"نسبة %", fixed:"مبلغ على الحتة", maxUses:"أقصى استخدام (0 = مفتوح)", gen:"توليد", unlimited:"مفتوح", never:"—", impact:"إجمالي الخصم", expired:"منتهي",
     movesSub:"كل وارد ومنصرف وجرد على المخزن.", type2:"النوع", ref:"مرجع", allTypes:"كل الحركات",
+    archive:"الأرشيف", archSub:"الطلبات القديمة المقفولة بتتنقل هنا عشان السيستم يفضل سريع. أرقامها لسه داخلة في الداشبورد.",
+    archOrders:"طلب في الأرشيف", archLast:"آخر أرشفة", archAuto:"الأرشفة التلقائية", archAutoTxt:"أول كل شهر — أي طلب مقفول أقدم من {d} يوم",
+    archNow:"أرشف دلوقتي", archOlder:"الطلبات المقفولة الأقدم من", days:"يوم", archRule:"بيتأرشف بس: الطلبات المدفوعة بالكامل والملغية. أي طلب عليه آجل بيفضل ظاهر لحد ما يتحصّل.",
+    archDone:"اتأرشف {o} طلب · {p} دفعة · {m} حركة ✓", archSearch:"ابحث في الأرشيف برقم الطلب أو العميل أو التليفون…", archHint:"الأرشيف مش بيتحمّل مع الموقع — بيتجاب بس لما تبحث.",
+    archived:"مؤرشف", confirmArch:"هيتنقل للأرشيف كل طلب مقفول أقدم من {d} يوم. متأكد؟", searchBtn:"بحث", activeData:"البيانات الحالية",
     nothing:"مفيش نتايج.", saved:"اتحفظ ✓", deleted:"اتحذف ✓", genDone:"الأكواد اتولّدت ✓", cancelledOk:"الطلب اتلغى والكميات والفلوس رجعت ✓", paidOk:"التحصيل اتسجل ✓",
     confirmDel:"تحذف المنتج ده؟ (هيتخفى والحركة القديمة هتفضل)", confirmCancel:"إلغاء الطلب هيرجّع الكميات للمخزن ويسجّل استرجاع الفلوس. متأكد؟",
     popupBlocked:"المتصفح قفل النافذة — اسمح بالـ Pop-ups.", outOf:"خلص",
@@ -433,6 +438,11 @@ const T = {
     discSub:"Percentage or fixed-per-piece codes, with usage limits and expiry.", addCode:"New code", code:"Code", type:"Type", value:"Value", uses:"Uses", ends:"Ends", active:"Active",
     percent:"Percent %", fixed:"Fixed per piece", maxUses:"Max uses (0 = unlimited)", gen:"Generate", unlimited:"Unlimited", never:"—", impact:"Total discounted", expired:"Expired",
     movesSub:"Every stock in, out and count.", type2:"Type", ref:"Ref", allTypes:"All types",
+    archive:"Archive", archSub:"Old settled orders move here so the system stays fast. Their numbers still count in the dashboard.",
+    archOrders:"archived orders", archLast:"Last archived", archAuto:"Auto-archive", archAutoTxt:"1st of every month — settled orders older than {d} days",
+    archNow:"Archive now", archOlder:"Settled orders older than", days:"days", archRule:"Only fully paid and cancelled orders are archived. Orders with a balance stay visible until collected.",
+    archDone:"Archived {o} orders · {p} payments · {m} moves ✓", archSearch:"Search the archive by order no., customer or phone…", archHint:"The archive isn't loaded with the site — it's fetched only when you search.",
+    archived:"Archived", confirmArch:"Every settled order older than {d} days will move to the archive. Sure?", searchBtn:"Search", activeData:"Current data",
     nothing:"Nothing found.", saved:"Saved ✓", deleted:"Deleted ✓", genDone:"Codes generated ✓", cancelledOk:"Order cancelled; stock and money returned ✓", paidOk:"Payment recorded ✓",
     confirmDel:"Delete this product? (hidden; history stays)", confirmCancel:"Cancelling returns stock and records a refund. Sure?",
     popupBlocked:"The browser blocked the window — allow pop-ups.", outOf:"Out",
@@ -454,7 +464,7 @@ const S = {
   lang: store.get("exit.lang") || "ar",
   ses: store.get("exit.ses"), data: store.get("exit.cache"),
   tab: null, per: store.get("exit.per") || "30", kind: store.get("exit.kind") || "qr",
-  f: { p:"", pc:"", low:false, o:"", os:"", m:"", mt:"", c:"", pay:"" },
+  f: { p:"", pc:"", low:false, o:"", os:"", m:"", mt:"", c:"", pay:"" }, arch: { q:"", res:null, busy:false, days:"90" },
   sel: new Set(), modal: null, sync: "ok", demo: false, fresh: true, err: "", busy: false, cam: null,
 };
 const t = (k, vars) => { let s = (T[S.lang] && T[S.lang][k]) || T.ar[k] || k; if (vars) Object.keys(vars).forEach(x => { s = s.replace("{" + x + "}", vars[x]); }); return s; };
@@ -487,6 +497,7 @@ const I = {
   collect:'<svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="13" rx="1"/><circle cx="12" cy="12.5" r="2.8"/><path d="M6 10v.01M18 15v.01"/></svg>',
   discounts:'<svg viewBox="0 0 24 24"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7" cy="7" r="1.5"/></svg>',
   moves:'<svg viewBox="0 0 24 24"><path d="M7 4v16M7 4L3 8M7 4l4 4M17 20V4M17 20l-4-4M17 20l4-4"/></svg>',
+  archive:'<svg viewBox="0 0 24 24"><path d="M3 4h18v4H3zM5 8v12h14V8M10 12h4"/></svg>',
   more:'<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>',
   out:'<svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>',
   x:'<svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>',
@@ -558,10 +569,10 @@ function logout(msg){
 }
 
 /* ======================= SHELL ======================= */
-const TABS_ADMIN = ["dash","pos","products","codes","orders","collect","discounts","moves"];
+const TABS_ADMIN = ["dash","pos","products","codes","orders","collect","discounts","moves","archive"];
 const TABS_STAFF = ["home","pos","products","codes","moves"];
 const tabs = () => isAdmin() ? TABS_ADMIN : TABS_STAFF;
-const VIEWS = () => ({ dash:viewDash, home:viewHome, pos:viewPOS, products:viewProducts, codes:viewCodes, orders:viewOrders, collect:viewCollect, discounts:viewDiscounts, moves:viewMoves });
+const VIEWS = () => ({ dash:viewDash, home:viewHome, pos:viewPOS, products:viewProducts, codes:viewCodes, orders:viewOrders, collect:viewCollect, discounts:viewDiscounts, moves:viewMoves, archive:viewArchive });
 
 function render(){
   document.documentElement.lang = S.lang;
@@ -652,6 +663,7 @@ function range(per){
   let start;
   if (per === "all"){
     const ds = S.data.orders.map(o => new Date(o.date)).filter(d => !isNaN(d));
+    (S.data.summary || []).forEach(x => { const d = new Date(x.date); if (!isNaN(d)) ds.push(d); });
     start = ds.length ? dayStart(new Date(Math.min(...ds))) : addDays(end, -30);
     if ((end - start) / 864e5 < 7) start = addDays(end, -7);
   } else start = addDays(end, -Number(per));
@@ -662,9 +674,10 @@ function stats(start, end){
   const os = S.data.orders.filter(o => o.status === "Done" && inR(o.date));
   const rev = os.reduce((s, o) => s + o.total, 0);
   const cost = os.reduce((s, o) => s + orderCost(o), 0);
-  const collected = S.data.payments.filter(p => inR(p.date)).reduce((s, p) => s + p.amount, 0);
-  return { os, rev, cost, profit: rev - cost, n: os.length, avg: os.length ? rev / os.length : 0,
-    disc: os.reduce((s, o) => s + (o.discount || 0), 0), units: os.reduce((s, o) => s + o.items.reduce((a, l) => a + l.qty, 0), 0), collected };
+  let collected = S.data.payments.filter(p => inR(p.date)).reduce((s, p) => s + p.amount, 0);
+  let n = os.length, disc = os.reduce((s, o) => s + (o.discount || 0), 0), units = os.reduce((s, o) => s + o.items.reduce((a, l) => a + l.qty, 0), 0), R = rev, Cst = cost;
+  (S.data.summary || []).forEach(x => { if (!inR(x.date)) return; R += x.rev; Cst += x.cost; n += x.n; units += x.units; disc += x.disc; collected += x.collected; });   // المؤرشف
+  return { os, rev:R, cost:Cst, profit: R - Cst, n, avg: n ? R / n : 0, disc, units, collected };
 }
 const balance = o => o.status === "Done" ? Math.max(0, r2(o.total - o.paid)) : 0;
 const payState = o => o.status !== "Done" ? "cancel" : balance(o) <= 0 ? "paid" : o.paid > 0 ? "part" : "due";
@@ -677,14 +690,13 @@ function series(start, end){
     : unit === "week" ? addDays(dayStart(d), -((d.getDay() + 1) % 7)).getTime()   // الأسبوع يبدأ السبت
     : new Date(d.getFullYear(), d.getMonth(), 1).getTime();
   const buckets = new Map();
-  for (let d = new Date(start); d < end; d = unit === "month" ? new Date(d.getFullYear(), d.getMonth() + 1, 1) : addDays(d, unit === "week" ? 7 : 1)) {
-    const k = keyOf(d); if (!buckets.has(k)) buckets.set(k, { rev:0, prof:0, n:0 });
-  }
+  for (let d = new Date(start); d < end; d = addDays(d, 1)) { const k = keyOf(d); if (!buckets.has(k)) buckets.set(k, { rev:0, prof:0, n:0 }); }
   S.data.orders.forEach(o => {
     if (o.status !== "Done") return; const d = new Date(o.date); if (d < start || d >= end) return;
     const b = buckets.get(keyOf(d)); if (!b) return;
     b.rev += o.total; b.prof += o.total - orderCost(o); b.n++;
   });
+  (S.data.summary || []).forEach(x => { const d = new Date(x.date); if (d < start || d >= end) return; const b = buckets.get(keyOf(d)); if (!b) return; b.rev += x.rev; b.prof += x.rev - x.cost; b.n += x.n; });
   const keys = [...buckets.keys()].sort((a, b) => a - b);
   const lab = k => { const d = new Date(k); return unit === "month" ? `${pad(d.getMonth() + 1)}/${String(d.getFullYear()).slice(2)}` : `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`; };
   return { unit, labels: keys.map(lab), rev: keys.map(k => r2(buckets.get(k).rev)), prof: keys.map(k => r2(buckets.get(k).prof)), n: keys.map(k => buckets.get(k).n) };
@@ -1191,6 +1203,38 @@ function viewDiscounts(){
   : `<tr><td colspan="7"><div class="empty">—</div></td></tr>`}</tbody></table></div>`;
 }
 
+/* ======================= ARCHIVE (admin, loaded on demand) ======================= */
+function viewArchive(){
+  const A = S.data.archive || { orders:0, last:"", days:90 }, R = S.arch;
+  const res = R.res;
+  return pageHead(t("archive"), t("archSub")) +
+  `<div class="kpis rv" style="--i:1;grid-template-columns:repeat(3,minmax(0,1fr))">
+    ${kpi(t("archOrders"), "archive", A.orders, "int")}
+    <div class="kpi"><div class="k">${I.refresh}${t("archLast")}</div><span class="v" style="font-size:20px">${A.last ? fmtDate(A.last) : "—"}</span><div class="s">${A.last ? fmtDay(A.last) : ""}</div></div>
+    <div class="kpi"><div class="k">${I.dash}${t("archAuto")}</div><span class="v" style="font-size:16px;white-space:normal;line-height:1.4;font-family:inherit;font-stretch:100%">${t("archAutoTxt", { d:A.days })}</span></div>
+  </div>
+  <div class="panel rv" style="--i:2;margin-top:16px"><div class="panel-h"><h3>${t("archNow")}<small>${t("archRule")}</small></h3></div>
+    <div class="bar" style="margin:0"><span class="muted" style="font-weight:700">${t("archOlder")}</span>
+      <select class="inp" id="arch-days" style="width:auto;min-width:120px">${["30","60","90","180","365"].map(d => `<option value="${d}" ${R.days === d ? "selected" : ""}>${d} ${t("days")}</option>`).join("")}</select>
+      <button class="btn red" data-act="archiveNow" ${S.busy ? "disabled" : ""}>${I.archive.replace("<svg", '<svg style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8"')} ${t("archNow")}</button></div></div>
+  <div class="panel-h rv" style="--i:3;margin-top:24px"><h3>${t("archSearch").replace("…", "")}<small>${t("archHint")}</small></h3></div>
+  <form class="bar rv" style="--i:3" id="arch-form"><input class="inp grow" id="arch-q" placeholder="${t("archSearch")}" value="${esc(R.q)}"><button class="btn" type="submit" ${R.busy ? "disabled" : ""}>${R.busy ? "…" : t("searchBtn")}</button></form>
+  <div class="rv" style="--i:4">${res ? archTable(res) : ""}</div>`;
+}
+function archTable(res){
+  if (!res.orders.length) return `<div class="tbl-wrap"><div class="empty">${t("nothing")}</div></div>`;
+  return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>${t("no")}</th><th>${t("customer")}</th><th>${t("date")}</th><th>${t("items")}</th><th>${t("total")}</th><th>${t("status")}</th><th></th></tr></thead><tbody>
+  ${res.orders.map((o, i) => `<tr style="--r:${Math.min(i, 18)}"><td class="main"><b class="num">#${o.no}</b></td><td data-l="${t("customer")}"><div class="pn">${esc(o.customer || "—")}</div>${o.phone ? `<div class="pm mono">${esc(o.phone)}</div>` : ""}</td>
+    <td data-l="${t("date")}" class="dim num">${fmtDate(o.date)}</td><td data-l="${t("items")}" style="font-size:13px">${o.items.map(l => `${esc(l.name)} <span class="num dim">×${qn(l.qty)}</span>`).join("، ")}</td>
+    <td data-l="${t("total")}">${LE(o.total)}</td><td data-l="${t("status")}">${o.status === "Done" ? `<span class="tag tg-mute">${t("archived")}</span>` : `<span class="tag tg-mute">${t("st_cancel")}</span>`}</td>
+    <td><div class="acts"><button class="btn xs ghost" data-act="viewArch" data-id="${o.no}">${t("view")}</button></div></td></tr>`).join("")}</tbody></table></div>`;
+}
+async function archSearch(){
+  const R = S.arch; R.q = ($("arch-q") || {}).value || ""; R.busy = true; softRender();
+  try { const j = await call("archiveSearch", { q:R.q }); R.res = j; } catch(e) { toast(errText(e), true); }
+  R.busy = false; softRender();
+}
+
 /* ======================= MOVES ======================= */
 function viewMoves(){
   const types = isAdmin() ? ["IN","OUT","ADJUST","SALE","RETURN"] : ["IN","OUT","ADJUST"];
@@ -1294,8 +1338,8 @@ function renderModal(){
   }
 
   if (m.type === "viewOrder"){
-    const o = S.data.orders.find(x => String(x.no) === String(m.no)); if (!o){ S.modal = null; return renderModal(); }
-    const pays = S.data.payments.filter(p => p.no === o.no);
+    const o = m.order || S.data.orders.find(x => String(x.no) === String(m.no)); if (!o){ S.modal = null; return renderModal(); }
+    const pays = m.order ? (m.pays || []) : S.data.payments.filter(p => p.no === o.no);
     html = shell(`<span class="num">#${o.no}</span> ${payTag(o)}`, `
       <div class="kvs"><span>${t("customer")}</span><b>${esc(o.customer || "—")}${o.phone ? ` · <span class="mono">${esc(o.phone)}</span>` : ""}</b><span>${t("date")}</span><b class="num">${fmtDate(o.date)}</b><span>${t("by")}</span><b>${esc(o.by)}</b>
         ${o.note ? `<span>${t("note")}</span><b>${esc(o.note)}</b>` : ""}${o.status === "Cancelled" ? `<span>${t("st_cancel")}</span><b>${esc(o.cby)} · <span class="num">${fmtDate(o.cat)}</span></b>` : ""}</div>
@@ -1305,7 +1349,7 @@ function renderModal(){
       <div class="totals"><div><span>${t("subtotal")}</span><b>${CUR} ${money(o.subtotal)}</b></div>${o.discount ? `<div class="disc"><span>${t("discount")}</span><b>−${CUR} ${money(o.discount)}</b></div>` : ""}
         <div class="big"><span>${t("total")}</span><b>${CUR} ${money(o.total)}</b></div><div><span>${t("paid")}</span><b>${CUR} ${money(o.paid)}</b></div>${balance(o) ? `<div><span>${t("remaining")}</span><b style="color:var(--amber)">${CUR} ${money(balance(o))}</b></div>` : ""}</div>
       ${pays.length ? `<div class="panel-h" style="margin:18px 0 6px"><h3>${t("payments")}</h3></div><div class="rows">${pays.map(p => `<div class="rw"><div class="grow"><b class="num ${p.amount < 0 ? "neg" : ""}">${CUR} ${money(p.amount)}</b><span class="pm">${esc(p.method)} · ${esc(p.by)} · ${esc(p.note)}</span></div><span class="dim num" style="font-size:12px">${fmtDate(p.date)}</span></div>`).join("")}</div>` : ""}`,
-      `${o.status === "Done" ? `<button type="button" class="btn ghost" data-act="cancelOrder" data-id="${o.no}" style="margin-inline-end:auto;color:#ff6b6e">${t("cancelOrder")}</button>` : ""}
+      m.order ? `<span class="tag tg-mute" style="margin-inline-end:auto">${t("archived")}</span><button type="button" class="btn ghost" data-act="closeModal">${t("close")}</button>` : `${o.status === "Done" ? `<button type="button" class="btn ghost" data-act="cancelOrder" data-id="${o.no}" style="margin-inline-end:auto;color:#ff6b6e">${t("cancelOrder")}</button>` : ""}
        ${balance(o) > 0 ? `<button type="button" class="btn red" data-act="payOrder" data-id="${o.no}">${t("collectBtn")}</button>` : ""}<button type="button" class="btn ghost" data-act="closeModal">${t("close")}</button>`, true);
   }
 
@@ -1403,6 +1447,9 @@ document.addEventListener("click", e => {
   if (a === "dtype"){ syncDisc(); S.modal.d.type = v; renderModal(); return; }
   if (a === "dactive"){ const on = el.getAttribute("aria-checked") !== "true"; el.setAttribute("aria-checked", on); S.modal.d.active = on; return; }
   if (a === "closeModal") return closeModal();
+  if (a === "archiveNow"){ const d = $("arch-days").value; S.arch.days = d; if (!confirm(t("confirmArch", { d }))) return;
+    write("archive", { days:+d }).then(j => { if (j && j.moved) toast(t("archDone", { o:j.moved.orders, p:j.moved.payments, m:j.moved.moves })); S.arch.res = null; }); return; }
+  if (a === "viewArch"){ const o = S.arch.res.orders.find(x => String(x.no) === String(id)); return openModal({ type:"viewOrder", no:id, order:o, pays:S.arch.res.payments.filter(p => p.no === o.no) }); }
 });
 
 function syncDisc(){ const f = $("disc-form"); if (!f) return; const d = S.modal.d; ["code","value","max","ends","note"].forEach(k => { d[k] = f.elements[k].value; }); }
@@ -1458,6 +1505,7 @@ document.addEventListener("submit", async e => {
     if (m.mt === "OUT" && q > p.stock){ m.err = t("e_no_stock") + ": " + qn(p.stock); return renderModal(); }
     write("move", { id:m.id, type:m.mt, qty:q, note:m.note }, t("saved")); return;
   }
+  if (f.id === "arch-form"){ archSearch(); return; }
   if (f.id === "pay-form"){ write("pay", { no:S.modal.no, amount:num($("pay-amt").value), method:$("pay-method").value, note:$("pay-note").value }, t("paidOk")); return; }
   if (f.id === "disc-form"){ syncDisc(); const d = S.modal.d; write("saveDiscount", { discount:{ orig:d.orig || "", code:d.code, type:d.type, value:num(d.value), max:num(d.max), ends:d.ends, note:d.note, active:d.active !== false } }, t("saved")); }
 });
@@ -1542,7 +1590,8 @@ async function demoCall(a, p){
   const out = x => Object.assign({ ok:true, data:{ user:u, methods:["Cash","InstaPay","Vodafone Cash","Card","Other"],
     products: D.products.map(y => { const o = Object.assign({}, y); if (!admin) delete o.cost; return o; }),
     moves: admin ? D.moves.slice() : D.moves.filter(m => m.type !== "SALE" && m.type !== "RETURN"),
-    orders: admin ? clone(D.orders) : [], payments: admin ? D.payments.slice() : [], discounts: admin ? clone(D.discounts) : [] } }, x || {});
+    orders: admin ? clone(D.orders) : [], payments: admin ? D.payments.slice() : [], discounts: admin ? clone(D.discounts) : [],
+    summary: admin ? clone(D.summary || []) : [], archive: admin ? { orders:(D.arch || []).length, last:D.lastArch || "", days:90 } : null } }, x || {});
   const fail = (c, m) => { throw apiErr(c, m); };
   const need = () => admin || fail("forbidden");
   const mv = (x, type, qty, before, after, ref, note) => D.moves.push({ date:new Date().toISOString(), pid:x.id, sku:x.sku, name:x.name, type, qty, before, after, ref:ref || "", by:u.name, note:note || "" });
@@ -1575,7 +1624,7 @@ async function demoCall(a, p){
       return { id:x.id, sku:x.sku, name:x.name, qty:i.qty, price, code, disc, sum:r2(price * i.qty - disc), cost:r2((x.cost || 0) * i.qty) }; });
     const subtotal = r2(lines.reduce((s, l) => s + l.price * l.qty, 0)), discount = r2(lines.reduce((s, l) => s + l.disc, 0)), total = r2(subtotal - discount);
     const paid = p.paid === "" || p.paid == null ? total : r2(Math.max(0, Math.min(total, p.paid)));
-    const no = D.orders.reduce((m, o) => Math.max(m, o.no), 1000) + 1;
+    const no = Math.max(D.orders.reduce((m, o) => Math.max(m, o.no), 1000), (D.arch || []).reduce((m, o) => Math.max(m, o.no), 0)) + 1;
     Object.keys(nd).forEach(id => { const x = find(id), after = x.stock - nd[id]; mv(x, "SALE", -nd[id], x.stock, after, "#" + no, p.customer); x.stock = after; });
     D.orders.push({ no, date:new Date().toISOString(), customer:p.customer || "", phone:p.phone || "", items:lines, total, status:"Done", by:u.name, note:"", cby:"", cat:"", subtotal, discount, paid, method:p.method || "Cash", cost:lines.reduce((s, l) => s + l.cost, 0), codes:Object.keys(used).join(", ") });
     if (paid > 0) D.payments.push({ date:new Date().toISOString(), no, amount:paid, method:p.method || "Cash", by:u.name, note:"دفعة الطلب" });
@@ -1588,6 +1637,19 @@ async function demoCall(a, p){
     o.items.forEach(l => { const x = D.products.find(y => y.id === l.id); if (!x) return; mv(x, "RETURN", l.qty, x.stock, x.stock + l.qty, "#" + o.no, "إلغاء طلب"); x.stock += l.qty; });
     o.status = "Cancelled"; o.cby = u.name; o.cat = new Date().toISOString();
     if (o.paid > 0){ D.payments.push({ date:new Date().toISOString(), no:o.no, amount:-o.paid, method:o.method, by:u.name, note:"استرجاع · إلغاء الطلب" }); o.paid = 0; } return out(); }
+  if (a === "archive"){ need(); const cut = new Date(Date.now() - p.days * 864e5), dk = d => { const x = new Date(d); return new Date(x.getFullYear(), x.getMonth(), x.getDate(), 12).toISOString(); };
+    D.summary = D.summary || []; D.arch = D.arch || []; D.archPay = D.archPay || []; const sm = {}; D.summary.forEach(x => { sm[dk(x.date)] = x; });
+    const gone = D.orders.filter(o => new Date(o.date) < cut && (o.status !== "Done" || o.paid >= o.total - .001)), goneNo = {}; gone.forEach(o => { goneNo[o.no] = 1; });
+    const b = k => sm[k] = sm[k] || { date:k, rev:0, cost:0, n:0, units:0, disc:0, collected:0 };
+    gone.forEach(o => { if (o.status !== "Done") return; const x = b(dk(o.date)); x.rev += o.total; x.cost += o.cost; x.n++; x.disc += o.discount; x.units += o.items.reduce((s, l) => s + l.qty, 0); });
+    const pg = D.payments.filter(q => goneNo[q.no]); pg.forEach(q => { b(dk(q.date)).collected += q.amount; });
+    const mg = D.moves.filter(m => new Date(m.date) < cut);
+    D.summary = Object.values(sm).sort((x, y) => new Date(x.date) - new Date(y.date));
+    D.arch.push(...gone); D.archPay.push(...pg); D.orders = D.orders.filter(o => !goneNo[o.no]); D.payments = D.payments.filter(q => !goneNo[q.no]); D.moves = D.moves.filter(m => new Date(m.date) >= cut);
+    D.lastArch = new Date().toISOString(); return out({ moved:{ orders:gone.length, payments:pg.length, moves:mg.length } }); }
+  if (a === "archiveSearch"){ need(); const s = String(p.q || "").trim().toLowerCase().replace(/^#/, ""), all = D.arch || [];
+    const hits = all.filter(o => !s || (o.no + " " + o.customer + " " + o.phone + " " + o.codes).toLowerCase().includes(s)).slice(-60).reverse(), nos = {}; hits.forEach(o => { nos[o.no] = 1; });
+    return { ok:true, orders:clone(hits), payments:(D.archPay || []).filter(q => nos[q.no]), total:all.length }; }
   fail("unknown_action");
 }
 
