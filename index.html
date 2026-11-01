@@ -92,7 +92,7 @@ select.inp{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.
 /* ---------- shell ---------- */
 .shell{display:grid;grid-template-columns:var(--side) minmax(0,1fr);min-height:100vh;background:linear-gradient(90deg,#000 var(--side),transparent var(--side))}
 :root[dir="rtl"] .shell{background:linear-gradient(270deg,#000 var(--side),transparent var(--side))}
-.side{position:sticky;top:0;height:100vh;background:#000;border-inline-end:1px solid var(--line);display:flex;flex-direction:column;padding:22px 14px}
+.side{position:relative;min-height:100vh;align-self:stretch;background:#000;border-inline-end:1px solid var(--line);display:flex;flex-direction:column;padding:22px 14px}
 .side .logo{font-size:26px;align-self:center;margin-bottom:28px}
 .nav{display:flex;flex-direction:column;gap:2px;flex:1;overflow:auto}
 .nav button{display:flex;align-items:center;gap:12px;height:44px;padding:0 14px;color:var(--muted);font-weight:600;font-size:14.5px;position:relative;transition:color .2s,background .2s;text-align:start}
@@ -360,6 +360,31 @@ html,body{overflow-x:hidden;max-width:100%}
 .reader{transition:box-shadow .2s}
 .reader.hit{box-shadow:0 0 0 3px var(--green)}
 label.btn input{display:none}
+
+/* full-screen scanner */
+.scan-big{width:100%;height:64px;font-size:17px;gap:12px}
+.scanner{position:fixed;inset:0;z-index:70;background:#000;overflow:hidden}
+.scanner video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.sc-shade{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.scanner .frame{width:min(70vw,62vh,420px);aspect-ratio:1;box-shadow:0 0 0 200vmax rgba(0,0,0,.55);position:relative;transition:transform .25s var(--ease)}
+.scanner .frame::before{content:'';position:absolute;inset:-3px;
+  background:linear-gradient(#fff,#fff) 0 0/34px 4px,linear-gradient(#fff,#fff) 0 0/4px 34px,linear-gradient(#fff,#fff) 100% 0/34px 4px,linear-gradient(#fff,#fff) 100% 0/4px 34px,
+  linear-gradient(#fff,#fff) 0 100%/34px 4px,linear-gradient(#fff,#fff) 0 100%/4px 34px,linear-gradient(#fff,#fff) 100% 100%/34px 4px,linear-gradient(#fff,#fff) 100% 100%/4px 34px;background-repeat:no-repeat}
+.scanner .frame::after{content:'';position:absolute;inset-inline:8%;top:50%;height:2px;background:var(--red-hi);box-shadow:0 0 12px var(--red-hi);animation:sweep 1.8s ease-in-out infinite alternate}
+@keyframes sweep{from{top:10%}to{top:90%}}
+.scanner.hit .frame{transform:scale(1.04)}
+.scanner.hit .frame::before{filter:drop-shadow(0 0 8px var(--green)) hue-rotate(0deg)}
+.scanner.hit .frame::after{background:var(--green);box-shadow:0 0 14px var(--green)}
+.sc-top{position:absolute;top:0;inset-inline:0;display:flex;justify-content:space-between;align-items:center;padding:calc(14px + env(safe-area-inset-top,0px)) 18px 14px;background:linear-gradient(rgba(0,0,0,.7),transparent)}
+.sc-top .logo{font-size:18px}
+.sc-mode{background:var(--red-hi);color:#fff;font-weight:800;padding:6px 14px;font-size:14px}
+.sc-tip{position:absolute;left:0;right:0;top:calc(50% + min(35vw,31vh,210px) + 18px);text-align:center;color:#fff;font-weight:700;font-size:15px;text-shadow:0 1px 6px #000}
+.sc-last{position:absolute;left:16px;right:16px;bottom:calc(96px + env(safe-area-inset-bottom,0px));background:rgba(18,18,17,.92);border:1px solid var(--line2);padding:12px 14px;display:flex;align-items:center;gap:8px;font-size:14px;opacity:0;transform:translateY(10px);transition:all .25s var(--ease)}
+.sc-last.on{opacity:1;transform:none}
+.sc-last span{color:var(--muted);margin-inline-start:auto;white-space:nowrap}
+.sc-bot{position:absolute;bottom:0;inset-inline:0;display:flex;gap:10px;justify-content:center;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));background:linear-gradient(transparent,rgba(0,0,0,.8))}
+.sc-bot .btn{height:52px;min-width:150px;font-size:16px}
+.sc-bot .btn b{background:var(--red-hi);color:#fff;padding:1px 8px;margin-inline-start:4px}
 </style>
 </head>
 <body>
@@ -391,7 +416,7 @@ const T = {
     kProducts:"المنتجات", kUnitsStock:"قطع في المخزن", kLow:"ناقص", kOut:"خلص", recentMoves:"آخر حركة",
     posSub:"اعمل سكان للـ QR أو ابحث بالاسم — هيظهرلك الكمية والسعر وكود الخصم.", SALE:"بيع", IN:"وارد", OUT:"منصرف", ADJUST:"جرد", RETURN:"مرتجع",
     camStart:"شغّل الكاميرا", camStop:"وقف الكاميرا", camOff:"الكاميرا مقفولة — أو استخدم سكانر USB / Bluetooth من أي صفحة", camErr:"مقدرتش أفتح الكاميرا. اسمح للموقع بالكاميرا.",
-    findPh:"ابحث بالاسم أو اكتب / اعمل سكان للكود…", snap:"صوّر الكود", camTip:"بعّد الموبايل 15–20 سم لحد ما الكود يبقى واضح", noCodeInPic:"مقدرتش أقرا كود في الصورة — قرّب شوية وخلّي الإضاءة كويسة", perScan:"الكمية لكل سكان", scanLog:"آخر السكانات", unknownCode:"كود مش معروف",
+    findPh:"ابحث بالاسم أو اكتب / اعمل سكان للكود…", snap:"صوّر الكود", openScanner:"افتح السكانر", scanHere:"حط الكود جوه المربع", torch:"كشاف", done:"تمام", camTip:"بعّد الموبايل 15–20 سم لحد ما الكود يبقى واضح", noCodeInPic:"مقدرتش أقرا كود في الصورة — قرّب شوية وخلّي الإضاءة كويسة", perScan:"الكمية لكل سكان", scanLog:"آخر السكانات", unknownCode:"كود مش معروف",
     cart:"السلة", cartEmpty:"اعمل سكان لمنتج وهيظهرلك هنا.", customer:"العميل", phone:"التليفون", method:"طريقة الدفع", paid:"المدفوع", paidPh:"الإجمالي كامل",
     subtotal:"الإجمالي قبل الخصم", discount:"الخصم", total:"الإجمالي", due:"الباقي آجل", checkout:"تأكيد البيع", clear:"مسح", note:"ملاحظة",
     qty:"الكمية", unitPrice:"سعر بيع الحتة", discCode:"كود الخصم", apply:"تطبيق", addToCart:"أضف للسلة", avail:"المتاح", inCart:"في السلة",
@@ -440,7 +465,7 @@ const T = {
     kProducts:"Products", kUnitsStock:"Units in stock", kLow:"Low", kOut:"Out", recentMoves:"Recent moves",
     posSub:"Scan a QR or search by name — set the quantity, price and discount code.", SALE:"Sell", IN:"In", OUT:"Out", ADJUST:"Count", RETURN:"Return",
     camStart:"Start camera", camStop:"Stop camera", camOff:"Camera off — or use a USB / Bluetooth scanner from any page", camErr:"Couldn't open the camera. Allow camera access.",
-    findPh:"Search by name or type / scan a code…", snap:"Snap code", camTip:"Hold the phone 15–20 cm away until the code is sharp", noCodeInPic:"Couldn't read a code in the photo — get a bit closer with good light", perScan:"Qty per scan", scanLog:"Recent scans", unknownCode:"Unknown code",
+    findPh:"Search by name or type / scan a code…", snap:"Snap code", openScanner:"Open scanner", scanHere:"Fit the code inside the square", torch:"Torch", done:"Done", camTip:"Hold the phone 15–20 cm away until the code is sharp", noCodeInPic:"Couldn't read a code in the photo — get a bit closer with good light", perScan:"Qty per scan", scanLog:"Recent scans", unknownCode:"Unknown code",
     cart:"Cart", cartEmpty:"Scan a product to add it here.", customer:"Customer", phone:"Phone", method:"Payment method", paid:"Paid", paidPh:"Full total",
     subtotal:"Subtotal", discount:"Discount", total:"Total", due:"Due later", checkout:"Complete sale", clear:"Clear", note:"Note",
     qty:"Quantity", unitPrice:"Unit price", discCode:"Discount code", apply:"Apply", addToCart:"Add to cart", avail:"Available", inCart:"in cart",
@@ -597,7 +622,7 @@ const VIEWS = () => ({ dash:viewDash, home:viewHome, pos:viewPOS, products:viewP
 function render(){
   document.documentElement.lang = S.lang;
   document.documentElement.dir = S.lang === "ar" ? "rtl" : "ltr";
-  if (S.cam) stopCam();
+  if (S.cam && (S.tab !== "pos" || !S.ses)) stopCam();
   const app = $("app");
   if (!S.ses || !S.data){ app.innerHTML = viewLogin(); S.fresh = false; return; }
   if (!S.tab || !tabs().includes(S.tab)) S.tab = tabs()[0];
@@ -1033,16 +1058,13 @@ function viewPOS(){
     <div class="stack">
       <div class="seg full rv" style="--i:1">${["SALE","IN","OUT"].map(k => `<button data-act="scanMode" data-v="${k}" aria-pressed="${SC.mode === k}">${t(k)}</button>`).join("")}</div>
       <div class="panel rv" style="--i:2">
-        <div class="find"><input class="inp" id="pos-q" placeholder="${t("findPh")}" autocomplete="off" spellcheck="false"><div class="drop" id="pos-drop" hidden></div></div>
-        <div class="g2" style="margin-top:12px;align-items:end">
-          <label class="btn" style="cursor:pointer">${I.cam.replace("<svg", '<svg style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8"')} ${t("snap")}<input type="file" id="snap-in" accept="image/*" capture="environment" hidden></label>
-          <button class="btn ghost" data-act="cam" id="cam-btn">${t("camStart")}</button>
+        <button class="btn red scan-big" data-act="cam" id="cam-btn">${I.pos.replace("<svg", '<svg style="width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8"')} ${t("openScanner")}</button>
+        <div class="g2" style="margin-top:10px">
+          <label class="btn ghost" style="cursor:pointer">${I.cam.replace("<svg", '<svg style="width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8"')} ${t("snap")}<input type="file" id="snap-in" accept="image/*" capture="environment" hidden></label>
+          <div id="mult-row" ${SC.mode === "SALE" ? "hidden" : ""}><input class="inp c" id="scan-mult" inputmode="numeric" value="${esc(SC.mult)}" placeholder="${t("perScan")}" title="${t("perScan")}" style="height:44px"></div>
         </div>
-        <div class="g2" style="margin-top:10px" id="mult-row" ${SC.mode === "SALE" ? "hidden" : ""}>
-          <div id="mult-wrap"><label class="dim" style="font-size:12px;font-weight:700;display:block;margin-bottom:6px">${t("perScan")}</label><input class="inp c" id="scan-mult" inputmode="numeric" value="${esc(SC.mult)}"></div>
-        </div>
-        <div id="reader" class="reader" style="margin-top:12px"><div class="ph">${I.cam}<span>${t("camOff")}</span></div></div>
-        <p class="hint" id="cam-tip" hidden>${t("camTip")}</p><div id="reader-file" hidden></div>
+        <div class="find" style="margin-top:10px"><input class="inp" id="pos-q" placeholder="${t("findPh")}" autocomplete="off" spellcheck="false"><div class="drop" id="pos-drop" hidden></div></div>
+        <p class="hint">${t("camOff").split(" — ")[1] || ""}</p><div id="reader-file" hidden></div>
       </div>
       <div class="panel rv" style="--i:3"><div class="panel-h"><h3>${t("scanLog")}</h3></div><div class="rows" id="scan-log">${logHtml()}</div></div>
     </div>
@@ -1137,45 +1159,100 @@ function beep(ok){
     o.type = "square"; o.frequency.value = ok ? 1480 : 210; g.gain.value = .05; o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + (ok ? .08 : .3)); } catch(e) {}
   if (navigator.vibrate) navigator.vibrate(ok ? 35 : [90, 60, 90]);
 }
+/* Live camera: own loop (getUserMedia → center square → BarcodeDetector / jsQR). Works on iPhone Safari. */
+const JSQR_URL = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js";
+let DET;
+function detector(){
+  if (DET !== undefined) return DET;
+  DET = null;
+  try { if ("BarcodeDetector" in window) DET = new BarcodeDetector({ formats:["qr_code","code_128","code_39","ean_13","ean_8","upc_a"] }); } catch(e) { DET = null; }
+  return DET;
+}
+async function decodeCanvas(cv, cx){
+  const d = detector();
+  if (d){ try { const r = await d.detect(cv); if (r && r[0] && r[0].rawValue) return r[0].rawValue; } catch(e) {} }
+  if (window.jsQR){
+    const img = cx.getImageData(0, 0, cv.width, cv.height);
+    const r = jsQR(img.data, cv.width, cv.height, { inversionAttempts:"attemptBoth" });
+    if (r && r.data) return r.data;
+  }
+  return null;
+}
 async function startCam(){
   if (S.cam) return;
-  const btn = $("cam-btn"); if (btn){ btn.disabled = true; btn.textContent = "…"; }
+  let ov = $("scanner");
+  if (!ov){ ov = document.createElement("div"); ov.id = "scanner"; ov.className = "scanner"; document.body.appendChild(ov); }
+  ov.innerHTML = `<video playsinline muted autoplay></video><div class="sc-shade"><i class="frame"></i></div>
+    <div class="sc-top"><span class="logo">EXIT</span><span class="sc-mode">${t(SC.mode)}</span></div>
+    <div class="sc-tip">${t("scanHere")}</div><div class="sc-last" id="sc-last"></div>
+    <div class="sc-bot"><button class="btn ghost" data-act="torch" id="torch-btn" hidden>💡 ${t("torch")}</button>
+      <button class="btn" data-act="camClose">${t("done")} · ${t("cart")} <b id="sc-count">${SC.cart.reduce((x, l) => x + l.qty, 0)}</b></button></div>`;
+  ov.hidden = false; document.body.style.overflow = "hidden";
   try {
-    if (!window.Html5Qrcode) await loadScript("https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js");
-    const el = $("reader"); if (!el) return; el.innerHTML = "";
-    const F = window.Html5QrcodeSupportedFormats;
-    const cam = new Html5Qrcode("reader", { verbose:false, formatsToSupport:[F.QR_CODE, F.CODE_128, F.CODE_39, F.EAN_13, F.EAN_8, F.UPC_A], experimentalFeatures:{ useBarCodeDetectorIfSupported:true } });
-    S.cam = cam;
-    await cam.start({ facingMode:"environment" }, {
-      fps:15, disableFlip:true,
-      qrbox:(w, h) => { const s = Math.floor(Math.min(w, h) * .82); return { width:s, height:s }; },
-      videoConstraints:{ facingMode:"environment", width:{ ideal:1920 }, height:{ ideal:1080 }, advanced:[{ focusMode:"continuous" }] },
-    }, txt => { const r = $("reader"); if (r){ r.classList.add("hit"); setTimeout(() => r.classList.remove("hit"), 500); } handleCode(txt, true); }, () => {});
-    const tip = $("cam-tip"); if (tip) tip.hidden = false;
-  } catch(e) {
-    S.cam = null; toast(t("camErr"), true);
-    const el = $("reader"); if (el) el.innerHTML = `<div class="ph">${I.cam}<span>${t("camOff")}</span></div>`;
-  }
-  camBtn();
+    if (!window.jsQR) await loadScript(JSQR_URL).catch(() => {});
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:false, video:{ facingMode:{ ideal:"environment" }, width:{ ideal:1920 }, height:{ ideal:1080 } } });
+    const tr = stream.getVideoTracks()[0], caps = tr.getCapabilities ? tr.getCapabilities() : {};
+    try { if (caps.focusMode && caps.focusMode.includes("continuous")) await tr.applyConstraints({ advanced:[{ focusMode:"continuous" }] }); } catch(e) {}
+    if (caps.torch){ const tb = $("torch-btn"); if (tb) tb.hidden = false; }
+    const v = ov.querySelector("video"); v.srcObject = stream; await v.play();
+    const cv = document.createElement("canvas"), cx = cv.getContext("2d", { willReadFrequently:true });
+    const cam = S.cam = { stream, track:tr, timer:null, torch:false };
+    const frame = ov.querySelector(".frame");
+    const tick = async () => {
+      if (S.cam !== cam) return;
+      if (v.readyState >= 2 && !S.modal){
+        // crop exactly what is inside the on-screen square (video is object-fit:cover)
+        const vw = v.videoWidth, vh = v.videoHeight, W = v.clientWidth, H = v.clientHeight;
+        const k = Math.max(W / vw, H / vh), fr = frame.getBoundingClientRect(), vr = v.getBoundingClientRect();
+        const side = Math.min(vw, vh, fr.width / k * 1.15);
+        const cxv = vw / 2 + ((fr.left + fr.width / 2) - (vr.left + W / 2)) / k, cyv = vh / 2 + ((fr.top + fr.height / 2) - (vr.top + H / 2)) / k;
+        const out = Math.min(800, Math.round(side)); cv.width = out; cv.height = out;
+        cx.drawImage(v, Math.max(0, cxv - side / 2), Math.max(0, cyv - side / 2), side, side, 0, 0, out, out);
+        const txt = await decodeCanvas(cv, cx);
+        if (txt && S.cam === cam){ ov.classList.add("hit"); setTimeout(() => ov.classList.remove("hit"), 600); handleCode(txt, true); scLast(); }
+      }
+      if (S.cam === cam) cam.timer = setTimeout(tick, 120);
+    };
+    tick();
+  } catch(e) { stopCam(); toast(t("camErr"), true); }
+}
+function scLast(){
+  const el = $("sc-last"), e = SC.log[0]; if (!el || !e) return;
+  el.innerHTML = `<i class="dot ${e.ok === false ? "bad" : "ok"}"></i> <b>${esc(e.p ? e.p.name : e.code)}</b> <span>${esc(e.msg)}</span>`;
+  el.classList.add("on"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("on"), 2500);
+  const c = $("sc-count"); if (c) c.textContent = SC.cart.reduce((x, l) => x + l.qty, 0);
 }
 function stopCam(){
-  const c = S.cam; S.cam = null; const tip = $("cam-tip"); if (tip) tip.hidden = true;
-  if (c) c.stop().then(() => c.clear()).catch(() => {}).finally(() => { const el = $("reader"); if (el && !el.children.length) el.innerHTML = `<div class="ph">${I.cam}<span>${t("camOff")}</span></div>`; });
-  camBtn();
+  const c = S.cam; S.cam = null;
+  if (c){ clearTimeout(c.timer); try { c.stream.getTracks().forEach(x => x.stop()); } catch(e) {} }
+  const ov = $("scanner"); if (ov){ ov.hidden = true; ov.innerHTML = ""; }
+  if (!S.modal) document.body.style.overflow = "";
 }
-function camBtn(){ const b = $("cam-btn"); if (b){ b.disabled = false; b.textContent = S.cam ? t("camStop") : t("camStart"); } }
+function camBtn(){}
 
 async function scanPhoto(file){
   if (!file) return;
+  let txt = null;
   try {
-    if (!window.Html5Qrcode) await loadScript("https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js");
-    if (S.cam) stopCam();
-    const F = window.Html5QrcodeSupportedFormats;
-    const sc = new Html5Qrcode("reader-file", { verbose:false, formatsToSupport:[F.QR_CODE, F.CODE_128, F.CODE_39, F.EAN_13, F.EAN_8, F.UPC_A] });
-    const txt = await sc.scanFile(file, false);
-    try { sc.clear(); } catch(e) {}
-    handleCode(txt);
-  } catch(e) { beep(false); toast(t("noCodeInPic"), true); }
+    if (!window.jsQR) await loadScript(JSQR_URL).catch(() => {});
+    const url = URL.createObjectURL(file), img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+    const cv = document.createElement("canvas"), cx = cv.getContext("2d", { willReadFrequently:true });
+    for (const max of [1000, 1600, 700, 2200]){
+      const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+      cv.width = Math.round(img.naturalWidth * k); cv.height = Math.round(img.naturalHeight * k);
+      cx.drawImage(img, 0, 0, cv.width, cv.height);
+      txt = await decodeCanvas(cv, cx); if (txt) break;
+    }
+    URL.revokeObjectURL(url);
+    if (!txt){
+      if (!window.Html5Qrcode) await loadScript("https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js");
+      const F = window.Html5QrcodeSupportedFormats;
+      const sc = new Html5Qrcode("reader-file", { verbose:false, formatsToSupport:[F.QR_CODE, F.CODE_128, F.CODE_39, F.EAN_13, F.EAN_8, F.UPC_A] });
+      txt = await sc.scanFile(file, false).catch(() => null); try { sc.clear(); } catch(e) {}
+    }
+  } catch(e) {}
+  if (txt) handleCode(txt); else { beep(false); toast(t("noCodeInPic"), true); }
   const inp = $("snap-in"); if (inp) inp.value = "";
 }
 
@@ -1310,7 +1387,7 @@ function listMoves(){
 
 /* ======================= MODALS ======================= */
 function openModal(m){ S.modal = Object.assign({ err:"" }, m); renderModal(); setTimeout(() => { const f = document.querySelector("#modal-root [data-focus]"); if (f){ f.focus(); if (f.select) f.select(); } }, 70); }
-function closeModal(){ if (S.busy) return; S.modal = null; renderModal(); }
+function closeModal(){ if (S.busy) return; S.modal = null; renderModal(); if (S.cam) document.body.style.overflow = "hidden"; }
 function lockModal(on){ document.querySelectorAll("#modal-root .btn").forEach(b => { b.disabled = on; }); }
 
 function renderModal(){
@@ -1460,7 +1537,7 @@ document.addEventListener("click", e => {
   const el = e.target.closest("[data-act]"); if (!el) return;
   const a = el.dataset.act, id = el.dataset.id, v = el.dataset.v;
   if (a === "scrim"){ if (e.target === el) closeModal(); return; }
-  if (a === "tab"){ if (S.modal && S.modal.type === "more") S.modal = null, renderModal(); if (S.tab !== v){ S.tab = v; S.fresh = true; render(); scrollTo({ top:0 }); } return; }
+  if (a === "tab"){ if (S.cam) stopCam(); if (S.modal && S.modal.type === "more") S.modal = null, renderModal(); if (S.tab !== v){ S.tab = v; S.fresh = true; render(); scrollTo({ top:0 }); } return; }
   if (a === "more") return openModal({ type:"more" });
   if (a === "lang"){ S.lang = S.lang === "ar" ? "en" : "ar"; store.set("exit.lang", S.lang); render(); renderModal(); return; }
   if (a === "logout"){ S.modal = null; renderModal(); return logout(); }
@@ -1483,6 +1560,8 @@ document.addEventListener("click", e => {
   if (a === "printSel") return openModal({ type:"labels", list: S.sel.size ? P().filter(p => S.sel.has(p.id)) : filteredCodes() });
   if (a === "printLabels"){ printLabels(S.modal.list, $("lb-stock").checked ? "stock" : String(Math.min(500, Math.max(1, Math.round(num($("lb-copies").value)) || 1))), $("lb-fmt").value, $("lb-price").checked, $("lb-kind").value); return closeModal(); }
   if (a === "cam") return S.cam ? stopCam() : startCam();
+  if (a === "camClose"){ stopCam(); updatePOS(); return; }
+  if (a === "torch"){ const c = S.cam; if (!c) return; c.torch = !c.torch; c.track.applyConstraints({ advanced:[{ torch:c.torch }] }).catch(() => {}); return; }
   if (a === "scanMode"){ SC.mode = v; document.querySelectorAll('[data-act="scanMode"]').forEach(b => b.setAttribute("aria-pressed", b.dataset.v === v)); const w = $("mult-row"); if (w) w.hidden = v === "SALE"; updatePOS(); return; }
   if (a === "pick"){ const p = byId(id); $("pos-drop").hidden = true; $("pos-q").value = ""; if (p) handleCode(codeOf(p)); return; }
   if (a === "qty"){ const inp = $("sl-qty"); const n = Math.max(1, (num(inp.value) || 0) + Number(v)); inp.value = n; S.modal.qty = String(n); updateSell(); return; }
@@ -1546,7 +1625,7 @@ document.addEventListener("submit", async e => {
     const line = SC.cart.find(l => l.id === p.id && l.price === pr && (l.def ? l.def.code : "") === (m.def ? m.def.code : ""));
     if (line) line.qty += q; else SC.cart.push({ id:p.id, qty:q, price:pr, def:m.def });
     addLog({ p, ok:true, msg:`+${qn(q)} × ${money(pr)}${m.def ? " · " + m.def.code : ""}` });
-    S.modal = null; renderModal(); updatePOS(); toast(`${p.name} · +${qn(q)}`);
+    S.modal = null; renderModal(); updatePOS(); scLast(); if (S.cam) document.body.style.overflow = "hidden"; else toast(`${p.name} · +${qn(q)}`);
     const qi = $("pos-q"); if (qi && matchMedia("(pointer:fine)").matches) qi.focus();
     return;
   }
